@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Rating — Rating Comercial de Crédito</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>if(sessionStorage.getItem('rc-logado')!=='true'){window.location.href='login.html';}</script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:#f0f0f5; color:#1a1a2e; -webkit-font-smoothing:antialiased; }
+
+.print-bar {
+  background: #1a1a2e; padding: 14px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.print-bar-logo { display: flex; align-items: center; gap: 10px; }
+.print-bar-icon {
+  width: 30px; height: 30px; background: linear-gradient(135deg,#7c3aed,#a78bfa);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900; color: #fff;
+}
+.print-bar-title { font-size: 13px; font-weight: 700; color: #fff; }
+.print-bar-actions { display: flex; gap: 10px; }
+.btn-print {
+  background: linear-gradient(135deg,#7c3aed,#5b21b6); color: #fff;
+  border: none; padding: 9px 22px; border-radius: 8px;
+  font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.02em;
+}
+.btn-back {
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.12); padding: 9px 22px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none;
+  display: flex; align-items: center;
+}
+
+/* PAGE */
+.page {
+  width: 794px; margin: 32px auto 60px;
+  background: #fff; border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+  overflow: hidden;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #0f0524 0%, #2d1069 50%, #7c3aed 100%);
+  padding: 40px 48px 36px; position: relative; overflow: hidden;
+}
+.header-glow {
+  position: absolute; right: -100px; top: -100px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,181,253,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.header-glow2 {
+  position: absolute; left: -60px; bottom: -80px;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.header-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 32px; position: relative; z-index: 2;
+}
+.header-logo { display: flex; align-items: center; gap: 12px; }
+.header-logo-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -1px;
+}
+.header-logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+.header-logo-title { font-size: 16px; font-weight: 800; color: #fff; }
+.header-logo-sub { font-size: 10px; color: rgba(196,181,253,0.7); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.header-badge {
+  background: rgba(196,181,253,0.12); border: 1px solid rgba(196,181,253,0.25);
+  color: #c4b5fd; font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; padding: 6px 14px; border-radius: 100px;
+}
+.header-client { position: relative; z-index: 2; }
+.header-client-label {
+  font-size: 11px; font-weight: 700; color: rgba(196,181,253,0.6);
+  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px;
+}
+.header-client-name { font-size: 30px; font-weight: 900; color: #fff; letter-spacing: -0.02em; margin-bottom: 4px; }
+.header-client-cpf { font-size: 13px; color: rgba(255,255,255,0.45); }
+.header-meta {
+  display: flex; gap: 28px; margin-top: 24px;
+  padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);
+  position: relative; z-index: 2; flex-wrap: wrap;
+}
+.header-meta-item { display: flex; flex-direction: column; gap: 3px; }
+.header-meta-label { font-size: 9px; color: rgba(196,181,253,0.5); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.header-meta-value { font-size: 13px; color: #fff; font-weight: 600; }
+
+/* BODY */
+.body { padding: 40px 48px 48px; }
+
+/* AVISO */
+.aviso {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1px solid #86efac; border-left: 4px solid #16a34a;
+  border-radius: 12px; padding: 18px 22px;
+  display: flex; gap: 14px; align-items: flex-start;
+  margin-bottom: 32px;
+}
+.aviso-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.aviso-title { font-size: 13px; font-weight: 800; color: #14532d; margin-bottom: 3px; }
+.aviso-desc { font-size: 12px; color: #166534; line-height: 1.5; }
+
+/* SCORE RESULTADO */
+.score-resultado {
+  background: linear-gradient(135deg, #0f0524, #2d1069);
+  border: 1px solid rgba(196,181,253,0.15);
+  border-radius: 16px; padding: 32px 40px;
+  display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr;
+  gap: 0; margin-bottom: 32px; text-align: center; align-items: center;
+}
+.score-resultado-divider { background: rgba(196,181,253,0.1); width: 1px; height: 60px; margin: auto; }
+.score-col-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(196,181,253,0.5); margin-bottom: 12px; }
+.score-col-num { font-size: 64px; font-weight: 900; color: #fff; line-height: 1; letter-spacing: -2px; }
+.score-col-sub { font-size: 12px; color: rgba(196,181,253,0.5); margin-top: 6px; }
+
+/* CLASSIFICAÇÃO DESTAQUE */
+.class-destaque {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.class-letra {
+  font-size: 72px; font-weight: 900; line-height: 1; letter-spacing: -3px;
+  background: linear-gradient(135deg, #34d399, #6ee7b7);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.class-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 16px; border-radius: 100px;
+  background: rgba(52,211,153,0.15); color: #34d399;
+  border: 1px solid rgba(52,211,153,0.3);
+}
+
+.renda-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.renda-valor { font-size: 24px; font-weight: 800; color: #fbbf24; letter-spacing: -0.5px; }
+.renda-label { font-size: 10px; color: rgba(196,181,253,0.4); text-transform: uppercase; letter-spacing: 1px; }
+
+/* SECTION */
+.section { margin-bottom: 28px; }
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 2px solid #f3f0ff;
+}
+.section-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #7c3aed, #c4b5fd);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.section-title { font-size: 12px; font-weight: 800; color: #1a1a2e; text-transform: uppercase; letter-spacing: 1px; }
+
+/* ACOES LIST */
+.acoes-list { display: flex; flex-direction: column; gap: 8px; }
+.acao-item {
+  display: flex; align-items: center; gap: 12px;
+  background: #f8f6ff; border: 1px solid #e9e3ff; border-radius: 10px;
+  padding: 12px 16px;
+}
+.acao-check {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #fff; flex-shrink: 0;
+}
+.acao-text { font-size: 13px; font-weight: 600; color: #374151; }
+
+/* ID GRID */
+.id-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.id-item { background: #f8f6ff; border: 1px solid #e9e3ff; border-radius: 8px; padding: 12px 14px; }
+.id-label { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.id-value { font-size: 12px; font-weight: 700; color: #1a1a2e; }
+
+/* OBS */
+.obs-box {
+  background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 16px; font-size: 13px; color: #374151; line-height: 1.6;
+}
+
+/* STATUS */
+.status-ok { display:inline-block; background:#d1fae5; color:#065f46; font-size:10px; font-weight:700; padding:2px 8px; border-radius:100px; }
+
+/* FOOTER */
+.footer {
+  background: #0f0524; padding: 22px 48px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-logo { display: flex; align-items: center; gap: 10px; }
+.footer-logo-icon {
+  width: 28px; height: 28px; background: rgba(167,139,250,0.2);
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 900; color: #c4b5fd;
+}
+.footer-logo-text { font-size: 13px; font-weight: 800; color: #fff; letter-spacing: 0.05em; }
+.footer-logo-sub { font-size: 9px; color: rgba(196,181,253,0.4); display: block; }
+.footer-info { font-size: 10px; color: rgba(196,181,253,0.4); text-align: right; line-height: 1.7; }
+.footer-stamp {
+  display: inline-block; border: 1px solid rgba(196,181,253,0.2);
+  border-radius: 6px; padding: 2px 8px; font-size: 9px;
+  color: rgba(196,181,253,0.5); letter-spacing: 1px; margin-top: 4px;
+}
+
+@media print {
+  body { background: #fff; }
+  .print-bar { display: none; }
+  .page { margin: 0; box-shadow: none; border-radius: 0; width: 100%; }
+  @page { margin: 0; size: A4; }
+}
+</style>
+</head>
+<body>
+
+<div class="print-bar">
+  <div class="print-bar-logo">
+    <div class="print-bar-icon">RC</div>
+    <span class="print-bar-title">Rating Comercial de Crédito</span>
+  </div>
+  <div class="print-bar-actions">
+    <a class="btn-back" href="index.html">← Novo relatório</a>
+    <button class="btn-print" onclick="window.print()">⬇ Salvar PDF</button>
+  </div>
+</div>
+
+<div class="page" id="page">
+
+  <div class="header">
+    <div class="header-glow"></div>
+    <div class="header-glow2"></div>
+    <div class="header-top">
+      <div class="header-logo">
+        <div class="header-logo-icon">RC</div>
+        <div class="header-logo-text">
+          <span class="header-logo-title">Rating Comercial</span>
+          <span class="header-logo-sub">de Crédito</span>
+        </div>
+      </div>
+      <div class="header-badge">Comprovante de Atualização</div>
+    </div>
+    <div class="header-client">
+      <div class="header-client-label">Relatório gerado para</div>
+      <div class="header-client-name" id="r-nome">—</div>
+      <div class="header-client-cpf">CPF: <strong id="r-cpf">—</strong></div>
+    </div>
+    <div class="header-meta">
+      <div class="header-meta-item">
+        <span class="header-meta-label">Data de emissão</span>
+        <span class="header-meta-value" id="r-data">—</span>
+      </div>
+      <div class="header-meta-item">
+        <span class="header-meta-label">Estado civil</span>
+        <span class="header-meta-value" id="r-civil">—</span>
+      </div>
+      <div class="header-meta-item">
+        <span class="header-meta-label">Data de nascimento</span>
+        <span class="header-meta-value" id="r-nasc">—</span>
+      </div>
+      <div class="header-meta-item">
+        <span class="header-meta-label">Consultor</span>
+        <span class="header-meta-value" id="r-consultor">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <div class="aviso">
+      <div class="aviso-icon">✅</div>
+      <div>
+        <div class="aviso-title">Atualização de perfil realizada com sucesso</div>
+        <div class="aviso-desc" id="r-aviso-desc">As informações do cliente foram atualizadas no portal Serasa Cadastro Positivo pela equipe da Rating Comercial de Crédito. Este documento comprova as ações realizadas e a evolução do perfil financeiro.</div>
+      </div>
+    </div>
+
+    <!-- SCORE -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">📊</div>
+        <div class="section-title">Score e Classificação de Crédito</div>
+      </div>
+      <div class="score-resultado">
+        <div>
+          <div class="score-col-label">Score de Crédito</div>
+          <div class="score-col-num" id="r-score-depois">—</div>
+          <div class="score-col-sub">Máximo: 980 pontos</div>
+        </div>
+        <div class="score-resultado-divider"></div>
+        <div class="class-destaque">
+          <div class="score-col-label">Classificação</div>
+          <div class="class-letra" id="r-class-depois">—</div>
+          <div class="class-badge" id="r-class-badge">—</div>
+        </div>
+        <div class="score-resultado-divider"></div>
+        <div class="renda-col">
+          <div class="score-col-label">Renda Mensal</div>
+          <div class="renda-valor" id="r-renda-depois">—</div>
+          <div class="renda-label">Informada</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AÇÕES -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">✅</div>
+        <div class="section-title">Ações Realizadas no Cadastro Positivo</div>
+      </div>
+      <div class="acoes-list" id="r-acoes"></div>
+    </div>
+
+    <!-- DADOS ATUALIZADOS -->
+    <div class="section" id="sec-dados">
+      <div class="section-header">
+        <div class="section-icon">✏️</div>
+        <div class="section-title">Dados Atualizados</div>
+      </div>
+      <div class="id-grid" id="r-dados-grid"></div>
+    </div>
+
+    <!-- DADOS CADASTRAIS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">👤</div>
+        <div class="section-title">Dados Cadastrais</div>
+      </div>
+      <div class="id-grid" id="r-cadastro-grid"></div>
+    </div>
+
+    <!-- OBS -->
+    <div class="section" id="sec-obs" style="display:none">
+      <div class="section-header">
+        <div class="section-icon">📝</div>
+        <div class="section-title">Observações</div>
+      </div>
+      <div class="obs-box" id="r-obs"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-logo">
+      <div class="footer-logo-icon">RC</div>
+      <div>
+        <div class="footer-logo-text">Rating Comercial de Crédito</div>
+        <span class="footer-logo-sub">Reabilitação e Gestão de Crédito</span>
+      </div>
+    </div>
+    <div class="footer-info">
+      Documento gerado automaticamente pelo sistema<br>
+      Fonte: Serasa Cadastro Positivo &mdash; <span id="r-footer-data">—</span>
+      <div><span class="footer-stamp" id="r-stamp">ID: —</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function formatDate(iso) {
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function idItem(label, value) {
+  if (!value) return '';
+  return `<div class="id-item"><div class="id-label">${label}</div><div class="id-value">${value}</div></div>`;
+}
+
+const d = JSON.parse(localStorage.getItem('rating-atual') || 'null');
+
+if (!d) {
+  document.getElementById('page').innerHTML = '<div style="padding:60px;text-align:center;color:#666">Nenhum dado encontrado. <a href="index.html">Voltar ao formulário</a></div>';
+} else {
+  // Header
+  document.getElementById('r-nome').textContent = d.nome || '—';
+  document.getElementById('r-cpf').textContent = d.cpf || '—';
+  document.getElementById('r-data').textContent = d.dataGeracao || '—';
+  document.getElementById('r-civil').textContent = d.civil || '—';
+  document.getElementById('r-nasc').textContent = d.nascimento ? formatDate(d.nascimento) : '—';
+  document.getElementById('r-consultor').textContent = d.consultor || 'Restaurar';
+  document.getElementById('r-footer-data').textContent = d.dataGeracao || '—';
+  document.getElementById('r-stamp').textContent = `ID: ${d.id}`;
+
+  // Aviso
+  document.getElementById('r-aviso-desc').textContent =
+    `As informações de ${d.nome} foram atualizadas no portal Serasa Cadastro Positivo pela equipe da Rating Comercial de Crédito em ${d.dataGeracao}. Este documento comprova todas as ações realizadas e o perfil financeiro atual do cliente.`;
+
+  // Score calculado
+  document.getElementById('r-score-depois').textContent = d.scoreDepois || '—';
+  document.getElementById('r-class-depois').textContent = d.classDepois || '—';
+
+  // Badge da classificação
+  const classBadgeTexts = { 'AAA': 'Excelente', 'AA': 'Muito Bom', 'A': 'Bom' };
+  document.getElementById('r-class-badge').textContent = classBadgeTexts[d.classDepois] || d.classDepois || '—';
+
+  // Renda
+  document.getElementById('r-renda-depois').textContent = d.rendaDepois || '—';
+
+  // Ações
+  const acoesEl = document.getElementById('r-acoes');
+  if (d.acoes && d.acoes.length > 0) {
+    acoesEl.innerHTML = d.acoes.map(a => `
+      <div class="acao-item">
+        <div class="acao-check">✓</div>
+        <div class="acao-text">${a}</div>
+      </div>`).join('');
+  } else {
+    acoesEl.innerHTML = '<div style="color:#9ca3af;font-size:13px">Nenhuma ação registrada.</div>';
+  }
+
+  // Dados atualizados
+  const dadosGrid = document.getElementById('r-dados-grid');
+  let dadosHtml = '';
+  if (d.email) dadosHtml += idItem('E-mail', d.email);
+  if (d.telefone) dadosHtml += idItem('Telefone', d.telefone);
+  if (d.endereco) dadosHtml += idItem('Endereço', d.endereco);
+  if (d.cidade) dadosHtml += idItem('Cidade / UF', d.cidade);
+  if (d.cep) dadosHtml += idItem('CEP', d.cep);
+  if (d.rendaDepois) dadosHtml += idItem('Renda mensal', d.rendaDepois);
+  if (d.dividasValor) dadosHtml += idItem('Total de dívidas', 'R$ ' + Number(d.dividasValor).toLocaleString('pt-BR', {minimumFractionDigits:2}));
+  dadosGrid.innerHTML = dadosHtml || '<div style="color:#9ca3af;font-size:13px">Nenhum dado de contato informado.</div>';
+
+  // Cadastrais
+  const cadGrid = document.getElementById('r-cadastro-grid');
+  let cadHtml = '';
+  cadHtml += idItem('Nome completo', d.nome);
+  cadHtml += idItem('CPF', d.cpf);
+  if (d.nascimento) cadHtml += idItem('Data de nascimento', formatDate(d.nascimento));
+  if (d.civil) cadHtml += idItem('Estado civil', d.civil);
+  if (d.instrucao) cadHtml += idItem('Grau de instrução', d.instrucao);
+  if (d.scoreDepois) cadHtml += idItem('Score calculado', `${d.scoreDepois} pontos`);
+  if (d.classDepois) cadHtml += idItem('Classificação', d.classDepois);
+  cadGrid.innerHTML = cadHtml;
+
+  // Obs
+  if (d.obs) {
+    document.getElementById('sec-obs').style.display = 'block';
+    document.getElementById('r-obs').textContent = d.obs;
+  }
+}
+</script>
+</body>
+</html>

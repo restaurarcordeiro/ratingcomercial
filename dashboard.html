@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Rating Comercial de Crédito</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>if(sessionStorage.getItem('rc-logado')!=='true'){window.location.href='login.html';}</script>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #16161f;
+  --surface3: #1c1c28;
+  --border: rgba(139,92,246,0.12);
+  --border-hover: rgba(139,92,246,0.3);
+  --purple: #7c3aed;
+  --purple-light: #a78bfa;
+  --purple-soft: #c4b5fd;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --text: #e8e4f0;
+  --muted: #8b8599;
+  --dim: #5a5468;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+/* NAV */
+.nav {
+  background: rgba(10,10,15,0.95); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border); padding: 0 40px;
+  position: sticky; top:0; z-index:100;
+  display: flex; align-items: center; justify-content: space-between; height: 64px;
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 900; color: #fff; letter-spacing: -1px;
+}
+.logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.logo-title { font-size: 14px; font-weight: 800; color: var(--text); }
+.logo-sub { font-size: 10px; color: var(--muted); font-weight: 500; }
+.nav-links { display: flex; gap: 4px; }
+.nav-link {
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  color: var(--muted); text-decoration: none; transition: all 0.2s;
+  cursor: pointer; border: none; background: none;
+}
+.nav-link:hover { background: var(--surface2); color: var(--text); }
+.nav-link.active { background: rgba(124,58,237,0.15); color: var(--purple-soft); }
+
+/* MAIN */
+.main { max-width: 1100px; margin: 0 auto; padding: 40px 40px 80px; }
+
+/* PAGE HEADER */
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+}
+.page-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--purple-soft); padding: 5px 14px;
+  background: rgba(124,58,237,0.1); border: 1px solid rgba(196,181,253,0.15);
+  border-radius: 100px; margin-bottom: 12px;
+}
+.page-badge .dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.page-title { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
+.page-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+/* FILTROS */
+.filtros { display: flex; gap: 6px; }
+.filtro-btn {
+  padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 700;
+  cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted); transition: all 0.2s; letter-spacing: 0.02em;
+}
+.filtro-btn:hover { border-color: var(--border-hover); color: var(--text); }
+.filtro-btn.active { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.4); color: var(--purple-soft); }
+
+.btn-export {
+  padding: 9px 20px; border-radius: 8px; font-size: 12px; font-weight: 700;
+  cursor: pointer; border: 1px solid rgba(52,211,153,0.3);
+  background: rgba(52,211,153,0.08); color: var(--green); transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-export:hover { background: rgba(52,211,153,0.15); }
+
+/* CARDS */
+.cards-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px 20px; transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border-hover); }
+.card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); margin-bottom: 10px; }
+.card-value { font-size: 32px; font-weight: 900; letter-spacing: -0.02em; line-height: 1; margin-bottom: 6px; }
+.card-sub { font-size: 12px; color: var(--muted); }
+.card-purple .card-value { color: var(--purple-soft); }
+.card-green .card-value { color: var(--green); }
+.card-amber .card-value { color: var(--amber); }
+.card-red .card-value { color: var(--red); }
+
+/* CHARTS ROW */
+.charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px;
+}
+.chart-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.chart-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.chart-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* CHARTS ROW 2 */
+.charts-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+/* TABELA RECENTES */
+.table-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+}
+.table-card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--dim); text-align: left; padding: 12px 20px;
+  border-bottom: 1px solid var(--border); background: var(--surface2);
+}
+.table td { font-size: 13px; padding: 12px 20px; border-bottom: 1px solid var(--border); color: var(--text); }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--surface2); }
+
+.pill {
+  display: inline-block; padding: 2px 10px; border-radius: 100px;
+  font-size: 10px; font-weight: 700;
+}
+.pill-aaa { background: rgba(52,211,153,0.15); color: var(--green); }
+.pill-aa { background: rgba(167,139,250,0.15); color: var(--purple-light); }
+.pill-a { background: rgba(251,191,36,0.15); color: var(--amber); }
+
+/* EMPTY */
+.empty-state {
+  text-align: center; padding: 60px 40px; color: var(--muted);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; }
+
+/* PRINT */
+@media print {
+  body { background: #fff; color: #000; }
+  .nav, .filtros, .btn-export, .nav-links { display: none !important; }
+  .main { padding: 20px; max-width: 100%; }
+  .card { background: #f8f6ff; border: 1px solid #e9e3ff; }
+  .chart-card { background: #f8f6ff; border: 1px solid #e9e3ff; }
+  .table-card { background: #f8f6ff; border: 1px solid #e9e3ff; }
+  .card-label, .chart-title, .table th { color: #6b7280 !important; }
+  .card-value, .chart-sub, .table td { color: #1a1a2e !important; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="logo-icon">RC</div>
+    <div class="logo-text">
+      <span class="logo-title">Rating Comercial</span>
+      <span class="logo-sub">de Crédito</span>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link active" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="index.html">Novo Relatório</a>
+    <a class="nav-link" href="historico.html">Histórico</a>
+    <button class="nav-link" onclick="sair()" style="cursor:pointer;color:#f87171">Sair</button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-badge"><span class="dot"></span> Métricas do Negócio</div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub">Acompanhe seus resultados em tempo real</p>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <div class="filtros">
+        <button class="filtro-btn" onclick="setFiltro('hoje', this)">Hoje</button>
+        <button class="filtro-btn" onclick="setFiltro('semana', this)">Semana</button>
+        <button class="filtro-btn" onclick="setFiltro('mes', this)">Mês</button>
+        <button class="filtro-btn active" onclick="setFiltro('todos', this)">Todos</button>
+      </div>
+      <button class="btn-export" onclick="exportarPDF()">⬇ Exportar PDF</button>
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards-grid">
+    <div class="card card-purple">
+      <div class="card-label">Total de Clientes</div>
+      <div class="card-value" id="card-clientes">0</div>
+      <div class="card-sub" id="card-clientes-sub">no período</div>
+    </div>
+    <div class="card card-green">
+      <div class="card-label">Faturamento</div>
+      <div class="card-value" id="card-faturamento">R$ 0</div>
+      <div class="card-sub" id="card-fat-sub">no período</div>
+    </div>
+    <div class="card card-amber">
+      <div class="card-label">Ticket Médio</div>
+      <div class="card-value" id="card-ticket">R$ 0</div>
+      <div class="card-sub">por cliente</div>
+    </div>
+    <div class="card card-red">
+      <div class="card-label">Média de Score</div>
+      <div class="card-value" id="card-score">0</div>
+      <div class="card-sub">pontos médios</div>
+    </div>
+  </div>
+
+  <!-- GRÁFICOS ROW 1 -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-title">Clientes e Faturamento por Dia</div>
+          <div class="chart-sub">Evolução diária no período selecionado</div>
+        </div>
+      </div>
+      <canvas id="chart-barras" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-title">Classificação</div>
+          <div class="chart-sub">Distribuição A / AA / AAA</div>
+        </div>
+      </div>
+      <canvas id="chart-pizza" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- GRÁFICOS ROW 2 -->
+  <div class="charts-row2">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-title">Faturamento Acumulado</div>
+          <div class="chart-sub">Crescimento no período</div>
+        </div>
+      </div>
+      <canvas id="chart-linha" height="160"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-title">Clientes por Mês</div>
+          <div class="chart-sub">Últimos 6 meses</div>
+        </div>
+      </div>
+      <canvas id="chart-mensal" height="160"></canvas>
+    </div>
+  </div>
+
+  <!-- TABELA RECENTES -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <div>
+        <div class="chart-title">Últimos Clientes Atendidos</div>
+        <div class="chart-sub" style="margin-top:2px">Relatórios gerados no período</div>
+      </div>
+    </div>
+    <div id="tabela-container">
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">Nenhum dado ainda</div>
+        <div class="empty-sub">Gere relatórios para ver os dados aqui</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function sair() {
+  sessionStorage.removeItem('rc-logado');
+  window.location.href = 'login.html';
+}
+
+let filtroAtual = 'todos';
+let chartBarras, chartPizza, chartLinha, chartMensal;
+
+function setFiltro(filtro, btn) {
+  filtroAtual = filtro;
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function getHistorico() {
+  return JSON.parse(localStorage.getItem('rating-historico') || '[]');
+}
+
+function filtrarPorPeriodo(dados) {
+  const agora = new Date();
+  return dados.filter(d => {
+    const data = new Date(d.id);
+    if (filtroAtual === 'hoje') {
+      return data.toDateString() === agora.toDateString();
+    } else if (filtroAtual === 'semana') {
+      const inicio = new Date(agora);
+      inicio.setDate(agora.getDate() - 7);
+      return data >= inicio;
+    } else if (filtroAtual === 'mes') {
+      return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
+    }
+    return true;
+  });
+}
+
+function formatMoeda(v) {
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function renderDashboard() {
+  const todos = getHistorico();
+  const dados = filtrarPorPeriodo(todos);
+
+  // CARDS
+  const totalClientes = dados.length;
+  const faturamento = dados.reduce((s, d) => s + (parseFloat(d.preco) || 0), 0);
+  const ticket = totalClientes > 0 ? faturamento / totalClientes : 0;
+  const mediaScore = totalClientes > 0
+    ? Math.round(dados.reduce((s, d) => s + (parseInt(d.scoreDepois) || 0), 0) / totalClientes)
+    : 0;
+
+  document.getElementById('card-clientes').textContent = totalClientes;
+  document.getElementById('card-faturamento').textContent = formatMoeda(faturamento);
+  document.getElementById('card-ticket').textContent = formatMoeda(ticket);
+  document.getElementById('card-score').textContent = mediaScore || '—';
+
+  const subTexto = { hoje: 'hoje', semana: 'esta semana', mes: 'este mês', todos: 'no total' };
+  document.getElementById('card-clientes-sub').textContent = subTexto[filtroAtual];
+  document.getElementById('card-fat-sub').textContent = subTexto[filtroAtual];
+
+  // GRÁFICO BARRAS — clientes e faturamento por dia
+  const diasMap = {};
+  dados.forEach(d => {
+    const data = new Date(d.id).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'});
+    if (!diasMap[data]) diasMap[data] = { clientes: 0, fat: 0 };
+    diasMap[data].clientes++;
+    diasMap[data].fat += parseFloat(d.preco) || 0;
+  });
+  const diasLabels = Object.keys(diasMap).slice(-14);
+  const diasClientes = diasLabels.map(d => diasMap[d].clientes);
+  const diasFat = diasLabels.map(d => diasMap[d].fat);
+
+  if (chartBarras) chartBarras.destroy();
+  chartBarras = new Chart(document.getElementById('chart-barras'), {
+    type: 'bar',
+    data: {
+      labels: diasLabels.length ? diasLabels : ['Sem dados'],
+      datasets: [
+        {
+          label: 'Clientes',
+          data: diasClientes.length ? diasClientes : [0],
+          backgroundColor: 'rgba(124,58,237,0.6)',
+          borderRadius: 6, yAxisID: 'y'
+        },
+        {
+          label: 'Faturamento (R$)',
+          data: diasFat.length ? diasFat : [0],
+          backgroundColor: 'rgba(52,211,153,0.4)',
+          borderRadius: 6, yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#8b8599', font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#5a5468', font: { size: 10 } }, grid: { color: 'rgba(139,92,246,0.06)' } },
+        y: { ticks: { color: '#5a5468', font: { size: 10 } }, grid: { color: 'rgba(139,92,246,0.06)' }, position: 'left' },
+        y1: { ticks: { color: '#5a5468', font: { size: 10 }, callback: v => 'R$'+v }, grid: { display: false }, position: 'right' }
+      }
+    }
+  });
+
+  // GRÁFICO PIZZA — classificação
+  const classCount = { A: 0, AA: 0, AAA: 0 };
+  dados.forEach(d => { if (d.classDepois && classCount[d.classDepois] !== undefined) classCount[d.classDepois]++; });
+
+  if (chartPizza) chartPizza.destroy();
+  chartPizza = new Chart(document.getElementById('chart-pizza'), {
+    type: 'doughnut',
+    data: {
+      labels: ['A', 'AA', 'AAA'],
+      datasets: [{
+        data: [classCount.A, classCount.AA, classCount.AAA],
+        backgroundColor: ['rgba(251,191,36,0.8)', 'rgba(167,139,250,0.8)', 'rgba(52,211,153,0.8)'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#8b8599', font: { size: 12 } } }
+      }
+    }
+  });
+
+  // GRÁFICO LINHA — faturamento acumulado
+  let acumulado = 0;
+  const linhaLabels = [];
+  const linhaData = [];
+  [...dados].reverse().forEach(d => {
+    acumulado += parseFloat(d.preco) || 0;
+    linhaLabels.push(new Date(d.id).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'}));
+    linhaData.push(acumulado);
+  });
+
+  if (chartLinha) chartLinha.destroy();
+  chartLinha = new Chart(document.getElementById('chart-linha'), {
+    type: 'line',
+    data: {
+      labels: linhaLabels.length ? linhaLabels : ['Sem dados'],
+      datasets: [{
+        label: 'Faturamento acumulado',
+        data: linhaData.length ? linhaData : [0],
+        borderColor: '#34d399',
+        backgroundColor: 'rgba(52,211,153,0.08)',
+        fill: true, tension: 0.4, pointRadius: 3,
+        pointBackgroundColor: '#34d399'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#5a5468', font: { size: 10 } }, grid: { color: 'rgba(139,92,246,0.06)' } },
+        y: { ticks: { color: '#5a5468', font: { size: 10 }, callback: v => 'R$'+v }, grid: { color: 'rgba(139,92,246,0.06)' } }
+      }
+    }
+  });
+
+  // GRÁFICO MENSAL — últimos 6 meses
+  const meses = [];
+  const mensalData = [];
+  const agora = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+    const label = d.toLocaleDateString('pt-BR', {month:'short', year:'2-digit'});
+    meses.push(label);
+    const count = todos.filter(r => {
+      const rd = new Date(r.id);
+      return rd.getMonth() === d.getMonth() && rd.getFullYear() === d.getFullYear();
+    }).length;
+    mensalData.push(count);
+  }
+
+  if (chartMensal) chartMensal.destroy();
+  chartMensal = new Chart(document.getElementById('chart-mensal'), {
+    type: 'bar',
+    data: {
+      labels: meses,
+      datasets: [{
+        label: 'Clientes',
+        data: mensalData,
+        backgroundColor: 'rgba(167,139,250,0.6)',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#5a5468', font: { size: 10 } }, grid: { color: 'rgba(139,92,246,0.06)' } },
+        y: { ticks: { color: '#5a5468', font: { size: 10 }, stepSize: 1 }, grid: { color: 'rgba(139,92,246,0.06)' } }
+      }
+    }
+  });
+
+  // TABELA
+  const container = document.getElementById('tabela-container');
+  if (dados.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">Nenhum dado no período</div><div class="empty-sub">Tente outro filtro ou gere novos relatórios</div></div>`;
+    return;
+  }
+
+  const pillClass = { AAA: 'pill-aaa', AA: 'pill-aa', A: 'pill-a' };
+  container.innerHTML = `
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Data</th>
+          <th>Score</th>
+          <th>Classificação</th>
+          <th>Valor Cobrado</th>
+          <th>Consultor</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${dados.slice(0,20).map(d => `
+          <tr>
+            <td><strong>${d.nome}</strong><br><span style="font-size:11px;color:var(--muted)">${d.cpf}</span></td>
+            <td style="font-size:12px">${d.dataGeracao}</td>
+            <td><strong>${d.scoreDepois || '—'}</strong></td>
+            <td><span class="pill ${pillClass[d.classDepois] || 'pill-a'}">${d.classDepois || '—'}</span></td>
+            <td style="color:var(--green);font-weight:700">${d.preco ? formatMoeda(d.preco) : '<span style="color:var(--dim)">—</span>'}</td>
+            <td style="font-size:12px">${d.consultor || '—'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function exportarPDF() {
+  window.print();
+}
+
+renderDashboard();
+</script>
+</body>
+</html>

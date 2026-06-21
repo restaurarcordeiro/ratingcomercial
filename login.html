@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Rating Comercial de Crédito</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: #0a0a0f;
+  color: #e8e4f0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow: hidden;
+}
+
+/* BACKGROUND */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(59,31,142,0.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+.grid-bg {
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+  pointer-events: none;
+}
+
+/* CARD */
+.card {
+  background: #111118;
+  border: 1px solid rgba(139,92,246,0.15);
+  border-radius: 20px;
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+}
+
+/* LOGO */
+.logo {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 36px; justify-content: center;
+}
+.logo-icon {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -1px;
+  box-shadow: 0 8px 24px rgba(124,58,237,0.35);
+}
+.logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+.logo-title { font-size: 18px; font-weight: 800; color: #e8e4f0; }
+.logo-sub { font-size: 11px; color: #8b8599; font-weight: 500; letter-spacing: 0.05em; }
+
+/* TITLE */
+.card-title { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+.card-sub { font-size: 14px; color: #8b8599; text-align: center; margin-bottom: 32px; }
+
+/* FIELDS */
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field-label { font-size: 11px; font-weight: 700; color: #8b8599; text-transform: uppercase; letter-spacing: 0.08em; }
+.field-input-wrap { position: relative; }
+.field input {
+  width: 100%;
+  background: #16161f;
+  border: 1px solid rgba(139,92,246,0.12);
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 14px; color: #e8e4f0;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s, background 0.2s;
+  outline: none;
+}
+.field input:focus {
+  border-color: #7c3aed;
+  background: #1c1c28;
+}
+.field input::placeholder { color: #5a5468; }
+
+/* TOGGLE SENHA */
+.toggle-senha {
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: #5a5468; cursor: pointer; font-size: 16px;
+  transition: color 0.2s; padding: 0;
+}
+.toggle-senha:hover { color: #a78bfa; }
+
+/* BTN */
+.btn-login {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #fff; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.02em; margin-top: 8px;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.3);
+  transition: all 0.2s;
+}
+.btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,58,237,0.4); }
+.btn-login:active { transform: translateY(0); }
+
+/* ERROR */
+.error-msg {
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 10px; padding: 12px 16px;
+  font-size: 13px; color: #f87171; font-weight: 600;
+  text-align: center; margin-top: 16px;
+  display: none;
+}
+
+/* FOOTER */
+.card-footer {
+  margin-top: 32px; padding-top: 24px;
+  border-top: 1px solid rgba(139,92,246,0.1);
+  text-align: center;
+  font-size: 11px; color: #5a5468;
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">RC</div>
+    <div class="logo-text">
+      <span class="logo-title">Rating Comercial</span>
+      <span class="logo-sub">de Crédito</span>
+    </div>
+  </div>
+
+  <h1 class="card-title">Bem-vindo de volta</h1>
+  <p class="card-sub">Faça login para acessar o sistema</p>
+
+  <div class="field">
+    <label class="field-label">Usuário</label>
+    <input type="text" id="usuario" placeholder="Digite seu usuário" autocomplete="username">
+  </div>
+
+  <div class="field">
+    <label class="field-label">Senha</label>
+    <div class="field-input-wrap">
+      <input type="password" id="senha" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter') entrar()">
+      <button class="toggle-senha" onclick="toggleSenha()" id="btn-toggle">👁</button>
+    </div>
+  </div>
+
+  <button class="btn-login" onclick="entrar()">Entrar no sistema</button>
+
+  <div class="error-msg" id="error-msg">Usuário ou senha incorretos. Tente novamente.</div>
+
+  <div class="card-footer">
+    Rating Comercial de Crédito &mdash; Acesso restrito
+  </div>
+</div>
+
+<script>
+// Verificar se já está logado
+if (sessionStorage.getItem('rc-logado') === 'true') {
+  window.location.href = 'dashboard.html';
+}
+
+function toggleSenha() {
+  const input = document.getElementById('senha');
+  const btn = document.getElementById('btn-toggle');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+function entrar() {
+  const usuario = document.getElementById('usuario').value.trim();
+  const senha = document.getElementById('senha').value.trim();
+  const erro = document.getElementById('error-msg');
+
+  if (usuario === 'Restaurar' && senha === 'Restaurar1') {
+    sessionStorage.setItem('rc-logado', 'true');
+    window.location.href = 'dashboard.html';
+  } else {
+    erro.style.display = 'block';
+    document.getElementById('senha').value = '';
+    setTimeout(() => { erro.style.display = 'none'; }, 3000);
+  }
+}
+</script>
+</body>
+</html>

@@ -213,9 +213,10 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       <div class="card-sub" id="card-clientes-sub">no período</div>
     </div>
     <div class="card card-green">
-      <div class="card-label">Faturamento</div>
+      <div class="card-label">Faturamento Próprio</div>
       <div class="card-value" id="card-faturamento">R$ 0</div>
-      <div class="card-sub" id="card-fat-sub">no período</div>
+      <div class="card-sub" id="card-fat-sub">acumulado total</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Mensal: <span id="card-fat-mensal" style="color:var(--green);font-weight:700;">R$ 0</span></div>
     </div>
     <div class="card card-amber">
       <div class="card-label">Afiliados Ativos</div>
@@ -225,7 +226,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <div class="card card-red">
       <div class="card-label">Fat. Total Afiliados</div>
       <div class="card-value" id="card-fat-afiliados">R$ 0</div>
-      <div class="card-sub">R$ 50 por relatório</div>
+      <div class="card-sub" id="card-fat-afiliados-sub">R$ 50 por relatório</div>
     </div>
   </div>
 
@@ -486,49 +487,38 @@ function renderAfiliados() {
     return;
   }
 
-  const rows = lista.map(aff => {
+  const listaOrdenada = [...lista].sort((a,b) => {
+    const ra = historico.filter(r => r.afiliadoId === a.id).length;
+    const rb = historico.filter(r => r.afiliadoId === b.id).length;
+    return rb - ra;
+  });
+
+  const rows = listaOrdenada.map(aff => {
     const rels = historico.filter(r => r.afiliadoId === aff.id);
     const fat = rels.length * 50;
-    const statusBadge = aff.ativo
+    const agora = new Date();
+    const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}`;
+    const relsMes = rels.filter(r => { const d = new Date(r.id); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === mesAtual; });
+    const statusBadge = aff.ativo !== false
       ? `<span style="background:rgba(52,211,153,0.12);color:#34d399;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Ativo</span>`
       : `<span style="background:rgba(248,113,113,0.12);color:#f87171;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Inativo</span>`;
-    const btnToggle = aff.ativo
+    const btnToggle = aff.ativo !== false
       ? `<button onclick="toggleAfiliado('${aff.id}')" style="background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🚫 Desativar</button>`
       : `<button onclick="toggleAfiliado('${aff.id}')" style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">✅ Ativar</button>`;
     return `<tr>
       <td>${statusBadge}</td>
       <td><strong>${aff.nome}</strong><br><small style="color:var(--muted)">${aff.usuario}</small></td>
-      <td style="font-weight:700;">${rels.length}</td>
+      <td style="font-weight:700;">${rels.length} <small style="color:var(--muted);font-weight:400;">(${relsMes.length} este mês)</small></td>
       <td style="color:var(--amber);font-weight:700;">R$ ${fat.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
       <td>${btnToggle}</td>
     </tr>`;
-  }).sort((a,b) => b.localeCompare(a));
+  });
 
   container.innerHTML = `<table class="table">
     <thead><tr>
-      <th>Status</th><th>Afiliado</th><th>Relatórios</th><th>A receber (R$50/rel.)</th><th>Ação</th>
+      <th>Status</th><th>Afiliado</th><th>Relatórios (total / mês)</th><th>A receber (R$50/rel.)</th><th>Ação</th>
     </tr></thead>
-    <tbody>${lista.sort((a,b) => {
-      const ra = historico.filter(r=>r.afiliadoId===a.id).length;
-      const rb = historico.filter(r=>r.afiliadoId===b.id).length;
-      return rb - ra;
-    }).map(aff => {
-      const rels = historico.filter(r => r.afiliadoId === aff.id);
-      const fat = rels.length * 50;
-      const statusBadge = aff.ativo
-        ? `<span style="background:rgba(52,211,153,0.12);color:#34d399;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Ativo</span>`
-        : `<span style="background:rgba(248,113,113,0.12);color:#f87171;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Inativo</span>`;
-      const btnToggle = aff.ativo
-        ? `<button onclick="toggleAfiliado('${aff.id}')" style="background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🚫 Desativar</button>`
-        : `<button onclick="toggleAfiliado('${aff.id}')" style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">✅ Ativar</button>`;
-      return `<tr>
-        <td>${statusBadge}</td>
-        <td><strong>${aff.nome}</strong><br><small style="color:var(--muted)">${aff.usuario}</small></td>
-        <td style="font-weight:700;">${rels.length}</td>
-        <td style="color:var(--amber);font-weight:700;">R$ ${fat.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-        <td>${btnToggle}</td>
-      </tr>`;
-    }).join('')}</tbody>
+    <tbody>${rows.join('')}</tbody>
   </table>`;
 }
 
@@ -536,10 +526,20 @@ function renderKpisAfiliados() {
   const lista = getAfiliados();
   const historico = getHistorico();
   const ativos = lista.filter(a => a.ativo !== false).length;
-  const totalRels = historico.filter(r => r.afiliadoId).length;
-  const fatTotal = totalRels * 50;
+  const relsAfil = historico.filter(r => r.afiliadoId);
+  const fatAcumulado = relsAfil.length * 50;
+
+  const agora = new Date();
+  const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}`;
+  const relsMes = relsAfil.filter(r => {
+    const d = new Date(r.id);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === mesAtual;
+  });
+  const fatMes = relsMes.length * 50;
+
   document.getElementById('card-afiliados').textContent = ativos;
-  document.getElementById('card-fat-afiliados').textContent = formatMoeda(fatTotal);
+  document.getElementById('card-fat-afiliados').textContent = formatMoeda(fatAcumulado);
+  document.getElementById('card-fat-afiliados-sub').textContent = `Mensal: ${formatMoeda(fatMes)}`;
 }
 
 function formatMoeda(v) {
@@ -552,20 +552,22 @@ function renderDashboard() {
 
   // CARDS
   const totalClientes = dados.length;
-  const faturamento = dados.reduce((s, d) => s + (parseFloat(d.preco) || 0), 0);
-  const ticket = totalClientes > 0 ? faturamento / totalClientes : 0;
-  const mediaScore = totalClientes > 0
-    ? Math.round(dados.reduce((s, d) => s + (parseInt(d.scoreDepois) || 0), 0) / totalClientes)
-    : 0;
+  // Faturamento próprio = sem afiliadoId
+  const dadosProprios = todos.filter(d => !d.afiliadoId);
+  const fatAcumulado = dadosProprios.reduce((s,d) => s + (parseFloat(d.preco)||0), 0);
+  const agora2 = new Date();
+  const mesAtual2 = `${agora2.getFullYear()}-${String(agora2.getMonth()+1).padStart(2,'0')}`;
+  const fatMensal = dadosProprios.filter(d => {
+    const dt = new Date(d.id); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` === mesAtual2;
+  }).reduce((s,d) => s + (parseFloat(d.preco)||0), 0);
 
   document.getElementById('card-clientes').textContent = totalClientes;
-  document.getElementById('card-faturamento').textContent = formatMoeda(faturamento);
-  document.getElementById('card-ticket').textContent = formatMoeda(ticket);
-  document.getElementById('card-score').textContent = mediaScore || '—';
+  document.getElementById('card-faturamento').textContent = formatMoeda(fatAcumulado);
+  document.getElementById('card-fat-mensal').textContent = formatMoeda(fatMensal);
+  document.getElementById('card-fat-sub').textContent = 'acumulado total';
 
   const subTexto = { hoje: 'hoje', semana: 'esta semana', mes: 'este mês', todos: 'no total' };
-  document.getElementById('card-clientes-sub').textContent = subTexto[filtroAtual];
-  document.getElementById('card-fat-sub').textContent = subTexto[filtroAtual];
+  document.getElementById('card-clientes-sub').textContent = subTexto[filtroAtual] || filtroMesAtual;
 
   // GRÁFICO BARRAS — clientes e faturamento por dia
   const diasMap = {};

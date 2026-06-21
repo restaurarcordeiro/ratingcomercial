@@ -259,10 +259,19 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <script>
 function sair() {
   sessionStorage.removeItem('rc-logado');
+  sessionStorage.removeItem('rc-role');
+  sessionStorage.removeItem('rc-afiliado-id');
+  sessionStorage.removeItem('rc-afiliado-nome');
   window.location.href = 'login.html';
 }
 
-let historico = JSON.parse(localStorage.getItem('rating-historico') || '[]');
+// Filtra por afiliado se não for admin
+const _role = sessionStorage.getItem('rc-role');
+const _afiliadoId = sessionStorage.getItem('rc-afiliado-id');
+const _todos = JSON.parse(localStorage.getItem('rating-historico') || '[]');
+let historico = (_role === 'afiliado' && _afiliadoId)
+  ? _todos.filter(r => r.afiliadoId === _afiliadoId)
+  : _todos;
 let filtrado = [...historico];
 
 function formatDate(iso) {

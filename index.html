@@ -574,6 +574,7 @@ function gerarRelatorio() {
   const dados = {
     id: Date.now(),
     dataGeracao: new Date().toLocaleString('pt-BR'),
+    afiliadoId: sessionStorage.getItem('rc-afiliado-id') || null,
     nome: nome.toUpperCase(),
     cpf,
     nascimento: document.getElementById('nascimento').value,

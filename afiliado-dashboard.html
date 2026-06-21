@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do Afiliado — Rating Comercial</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  if (sessionStorage.getItem('rc-logado') !== 'true' || sessionStorage.getItem('rc-role') !== 'afiliado') {
+    window.location.href = 'login.html';
+  }
+</script>
+<style>
+:root {
+  --bg: #0a0a0f; --surface: #111118; --surface2: #16161f; --surface3: #1c1c28;
+  --border: rgba(139,92,246,0.12); --border-hover: rgba(139,92,246,0.3);
+  --purple: #7c3aed; --purple-light: #a78bfa; --purple-soft: #c4b5fd;
+  --green: #34d399; --amber: #fbbf24; --red: #f87171;
+  --text: #e8e4f0; --muted: #8b8599; --dim: #5a5468;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; }
+.nav { background:rgba(10,10,15,0.95); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:0 40px; position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; height:64px; }
+.nav-logo { display:flex; align-items:center; gap:12px; }
+.logo-icon { width:36px; height:36px; background:linear-gradient(135deg,#7c3aed,#a78bfa); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:900; color:#fff; }
+.logo-title { font-size:14px; font-weight:800; }
+.logo-sub { font-size:10px; color:var(--muted); }
+.aff-badge { background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:var(--purple-soft); font-size:11px; font-weight:800; padding:4px 12px; border-radius:100px; margin-left:12px; }
+.nav-right { display:flex; align-items:center; gap:12px; }
+.nav-nome { font-size:13px; font-weight:600; color:var(--muted); }
+.btn-sair { background:none; border:1px solid rgba(248,113,113,0.3); color:#f87171; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; }
+.nav-links { display:flex; gap:4px; }
+.nav-link { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; color:var(--muted); text-decoration:none; transition:all 0.2s; cursor:pointer; border:none; background:none; }
+.nav-link:hover { background:var(--surface2); color:var(--text); }
+.nav-link.active { background:rgba(124,58,237,0.15); color:var(--purple-soft); }
+.main { max-width:1100px; margin:0 auto; padding:40px 40px 80px; }
+.page-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px; flex-wrap:wrap; gap:16px; }
+.page-badge { display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--purple-soft); padding:5px 14px; background:rgba(124,58,237,0.1); border:1px solid rgba(196,181,253,0.15); border-radius:100px; margin-bottom:12px; }
+.page-badge .dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.page-title { font-size:26px; font-weight:900; letter-spacing:-0.02em; }
+.page-sub { font-size:14px; color:var(--muted); margin-top:4px; }
+.filtros { display:flex; gap:6px; flex-wrap:wrap; }
+.filtro-btn { padding:8px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--muted); transition:all 0.2s; }
+.filtro-btn:hover { border-color:var(--border-hover); color:var(--text); }
+.filtro-btn.active { background:rgba(124,58,237,0.15); border-color:rgba(124,58,237,0.4); color:var(--purple-soft); }
+.btn-novo { padding:9px 20px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; transition:all 0.2s; }
+.btn-novo:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(124,58,237,0.3); }
+.cards-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px 20px; }
+.card-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--dim); margin-bottom:10px; }
+.card-value { font-size:32px; font-weight:900; letter-spacing:-0.02em; line-height:1; margin-bottom:6px; }
+.card-sub { font-size:12px; color:var(--muted); }
+.card-purple .card-value { color:var(--purple-soft); }
+.card-green .card-value { color:var(--green); }
+.card-amber .card-value { color:var(--amber); }
+.table-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:24px; }
+.table-card-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.chart-title { font-size:13px; font-weight:700; color:var(--text); }
+.chart-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.table { width:100%; border-collapse:collapse; }
+.table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--dim); text-align:left; padding:12px 20px; border-bottom:1px solid var(--border); background:var(--surface2); }
+.table td { font-size:13px; padding:12px 20px; border-bottom:1px solid var(--border); color:var(--text); }
+.table tr:last-child td { border-bottom:none; }
+.table tr:hover td { background:var(--surface2); }
+.pill { display:inline-block; padding:2px 10px; border-radius:100px; font-size:10px; font-weight:700; }
+.pill-aaa { background:rgba(52,211,153,0.15); color:var(--green); }
+.pill-aa { background:rgba(167,139,250,0.15); color:var(--purple-light); }
+.pill-a { background:rgba(251,191,36,0.15); color:var(--amber); }
+.empty-state { text-align:center; padding:60px 40px; color:var(--muted); }
+.empty-icon { font-size:40px; margin-bottom:12px; }
+.empty-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.empty-sub { font-size:13px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="logo-icon">RC</div>
+    <div>
+      <div class="logo-title">Rating Comercial</div>
+      <div class="logo-sub">de Crédito</div>
+    </div>
+    <span class="aff-badge">AFILIADO</span>
+  </div>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a class="nav-link active" href="afiliado-dashboard.html">Dashboard</a>
+      <a class="nav-link" href="index.html">Novo Relatório</a>
+      <a class="nav-link" href="historico.html">Histórico</a>
+    </div>
+    <span class="nav-nome" id="nav-nome"></span>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-badge"><span class="dot"></span> Meu Painel</div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub">Acompanhe seus relatórios e resultados</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div class="filtros">
+        <button class="filtro-btn" onclick="setFiltro('hoje',this)">Hoje</button>
+        <button class="filtro-btn" onclick="setFiltro('semana',this)">Semana</button>
+        <button class="filtro-btn" onclick="setFiltro('mes',this)">Mês</button>
+        <button class="filtro-btn active" onclick="setFiltro('todos',this)">Todos</button>
+      </div>
+      <a href="index.html" class="btn-novo">+ Novo Relatório</a>
+    </div>
+  </div>
+
+  <div class="cards-grid">
+    <div class="card card-purple">
+      <div class="card-label">Meus Relatórios</div>
+      <div class="card-value" id="card-rels">0</div>
+      <div class="card-sub" id="card-rels-sub">no período</div>
+    </div>
+    <div class="card card-green">
+      <div class="card-label">Faturamento</div>
+      <div class="card-value" id="card-fat">R$ 0</div>
+      <div class="card-sub" id="card-fat-sub">no período</div>
+    </div>
+    <div class="card card-amber">
+      <div class="card-label">Total de Relatórios</div>
+      <div class="card-value" id="card-total">0</div>
+      <div class="card-sub">todos os tempos</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-header">
+      <div>
+        <div class="chart-title">Meus Clientes</div>
+        <div class="chart-sub">Relatórios gerados por você</div>
+      </div>
+    </div>
+    <div id="tabela-container">
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">Nenhum relatório ainda</div>
+        <div class="empty-sub">Clique em "+ Novo Relatório" para começar</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const afiliadoId = sessionStorage.getItem('rc-afiliado-id');
+const afiliadoNome = sessionStorage.getItem('rc-afiliado-nome') || 'Afiliado';
+document.getElementById('nav-nome').textContent = afiliadoNome;
+
+let filtroAtual = 'todos';
+
+function sair() {
+  sessionStorage.removeItem('rc-logado');
+  sessionStorage.removeItem('rc-role');
+  sessionStorage.removeItem('rc-afiliado-id');
+  sessionStorage.removeItem('rc-afiliado-nome');
+  window.location.href = 'login.html';
+}
+
+function setFiltro(filtro, btn) {
+  filtroAtual = filtro;
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function getMeusRelatorios() {
+  const todos = JSON.parse(localStorage.getItem('rating-historico') || '[]');
+  return todos.filter(r => r.afiliadoId === afiliadoId);
+}
+
+function filtrarPorPeriodo(dados) {
+  const agora = new Date();
+  return dados.filter(d => {
+    const data = new Date(d.id);
+    if (filtroAtual === 'hoje') return data.toDateString() === agora.toDateString();
+    if (filtroAtual === 'semana') { const i = new Date(agora); i.setDate(agora.getDate()-7); return data >= i; }
+    if (filtroAtual === 'mes') return data.getMonth()===agora.getMonth() && data.getFullYear()===agora.getFullYear();
+    return true;
+  });
+}
+
+function formatMoeda(v) {
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function render() {
+  const meus = getMeusRelatorios();
+  const filtrados = filtrarPorPeriodo(meus);
+  const fat = filtrados.reduce((s,r) => s + (parseFloat(r.preco)||0), 0);
+  const subTexto = { hoje:'hoje', semana:'esta semana', mes:'este mês', todos:'no total' };
+
+  document.getElementById('card-rels').textContent = filtrados.length;
+  document.getElementById('card-rels-sub').textContent = subTexto[filtroAtual];
+  document.getElementById('card-fat').textContent = formatMoeda(fat);
+  document.getElementById('card-fat-sub').textContent = subTexto[filtroAtual];
+  document.getElementById('card-total').textContent = meus.length;
+
+  const container = document.getElementById('tabela-container');
+  if (!filtrados.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">Nenhum relatório no período</div><div class="empty-sub">Tente outro filtro ou gere novos relatórios</div></div>`;
+    return;
+  }
+
+  const pillClass = { AAA:'pill-aaa', AA:'pill-aa', A:'pill-a' };
+  container.innerHTML = `<table class="table">
+    <thead><tr><th>Cliente</th><th>Data</th><th>Score</th><th>Classificação</th><th>Valor Cobrado</th></tr></thead>
+    <tbody>${filtrados.map(d => `<tr>
+      <td><strong>${d.nome}</strong><br><span style="font-size:11px;color:var(--muted)">${d.cpf}</span></td>
+      <td style="font-size:12px">${d.dataGeracao}</td>
+      <td><strong>${d.scoreDepois||'—'}</strong></td>
+      <td><span class="pill ${pillClass[d.classDepois]||'pill-a'}">${d.classDepois||'—'}</span></td>
+      <td style="color:var(--green);font-weight:700">${d.preco ? formatMoeda(d.preco) : '<span style="color:var(--dim)">—</span>'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+render();
+</script>
+</body>
+</html>

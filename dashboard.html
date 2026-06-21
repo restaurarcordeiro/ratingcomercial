@@ -197,6 +197,9 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
         <button class="filtro-btn" onclick="setFiltro('semana', this)">Semana</button>
         <button class="filtro-btn" onclick="setFiltro('mes', this)">Mês</button>
         <button class="filtro-btn active" onclick="setFiltro('todos', this)">Todos</button>
+        <select id="filtro-mes-select" onchange="setFiltroMes(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--muted);outline:none;cursor:pointer;">
+          <option value="">Histórico por mês</option>
+        </select>
       </div>
       <button class="btn-export" onclick="exportarPDF()">⬇ Exportar PDF</button>
     </div>
@@ -215,14 +218,14 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       <div class="card-sub" id="card-fat-sub">no período</div>
     </div>
     <div class="card card-amber">
-      <div class="card-label">Ticket Médio</div>
-      <div class="card-value" id="card-ticket">R$ 0</div>
-      <div class="card-sub">por cliente</div>
+      <div class="card-label">Afiliados Ativos</div>
+      <div class="card-value" id="card-afiliados">0</div>
+      <div class="card-sub">afiliados cadastrados</div>
     </div>
     <div class="card card-red">
-      <div class="card-label">Média de Score</div>
-      <div class="card-value" id="card-score">0</div>
-      <div class="card-sub">pontos médios</div>
+      <div class="card-label">Fat. Total Afiliados</div>
+      <div class="card-value" id="card-fat-afiliados">R$ 0</div>
+      <div class="card-sub">R$ 50 por relatório</div>
     </div>
   </div>
 
@@ -287,22 +290,104 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     </div>
   </div>
 
+  <!-- SEÇÃO AFILIADOS -->
+  <div class="table-card" style="margin-top:24px;">
+    <div class="table-card-header">
+      <div>
+        <div class="chart-title">🤝 Gestão de Afiliados</div>
+        <div class="chart-sub" style="margin-top:2px">Relatórios gerados · R$ 50,00 por relatório</div>
+      </div>
+      <button onclick="abrirModalNovoAfiliado()" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);color:var(--purple-soft);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">+ Novo Afiliado</button>
+    </div>
+    <div id="tabela-afiliados-container">
+      <div class="empty-state">
+        <div class="empty-icon">🤝</div>
+        <div class="empty-title">Nenhum afiliado cadastrado</div>
+        <div class="empty-sub">Clique em "+ Novo Afiliado" para começar</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL NOVO AFILIADO -->
+<div id="modal-afiliado" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid rgba(124,58,237,0.2);border-radius:20px;padding:32px;width:100%;max-width:440px;position:relative;">
+    <button onclick="fecharModalAfiliado()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    <div style="font-size:18px;font-weight:900;margin-bottom:24px;" id="modal-aff-titulo">Novo Afiliado</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">Nome *</label>
+        <input type="text" id="aff-nome" placeholder="Nome do afiliado" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;outline:none;margin-top:6px;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">Usuário (login) *</label>
+        <input type="text" id="aff-usuario" placeholder="usuario123" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;outline:none;margin-top:6px;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">Senha *</label>
+        <input type="text" id="aff-senha" placeholder="Mínimo 6 caracteres" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;outline:none;margin-top:6px;">
+      </div>
+    </div>
+    <div id="aff-err" style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:#f87171;display:none;margin-top:14px;"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+      <button onclick="fecharModalAfiliado()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>
+      <button onclick="salvarAfiliado()" id="btn-salvar-aff" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script>
 function sair() {
   sessionStorage.removeItem('rc-logado');
+  sessionStorage.removeItem('rc-role');
+  sessionStorage.removeItem('rc-afiliado-id');
   window.location.href = 'login.html';
 }
 
+// Redireciona afiliado para seu painel
+if (sessionStorage.getItem('rc-role') === 'afiliado') {
+  window.location.href = 'afiliado-dashboard.html';
+}
+
 let filtroAtual = 'todos';
+let filtroMesAtual = '';
 let chartBarras, chartPizza, chartLinha, chartMensal;
 
 function setFiltro(filtro, btn) {
   filtroAtual = filtro;
+  filtroMesAtual = '';
+  document.getElementById('filtro-mes-select').value = '';
   document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderDashboard();
+}
+
+function setFiltroMes(val) {
+  filtroMesAtual = val;
+  if (val) {
+    filtroAtual = '';
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+  }
+  renderDashboard();
+}
+
+function popularFiltroMes() {
+  const todos = getHistorico();
+  const meses = {};
+  todos.forEach(d => {
+    const dt = new Date(d.id);
+    const key = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    const label = dt.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    meses[key] = label;
+  });
+  const sel = document.getElementById('filtro-mes-select');
+  sel.innerHTML = '<option value="">Histórico por mês</option>';
+  Object.entries(meses).sort((a,b) => b[0].localeCompare(a[0])).forEach(([val, label]) => {
+    const opt = document.createElement('option');
+    opt.value = val; opt.textContent = label;
+    sel.appendChild(opt);
+  });
 }
 
 function getHistorico() {
@@ -310,20 +395,151 @@ function getHistorico() {
 }
 
 function filtrarPorPeriodo(dados) {
+  if (filtroMesAtual) {
+    return dados.filter(d => {
+      const dt = new Date(d.id);
+      const key = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+      return key === filtroMesAtual;
+    });
+  }
   const agora = new Date();
   return dados.filter(d => {
     const data = new Date(d.id);
-    if (filtroAtual === 'hoje') {
-      return data.toDateString() === agora.toDateString();
-    } else if (filtroAtual === 'semana') {
-      const inicio = new Date(agora);
-      inicio.setDate(agora.getDate() - 7);
-      return data >= inicio;
-    } else if (filtroAtual === 'mes') {
-      return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
-    }
+    if (filtroAtual === 'hoje') return data.toDateString() === agora.toDateString();
+    if (filtroAtual === 'semana') { const i = new Date(agora); i.setDate(agora.getDate()-7); return data >= i; }
+    if (filtroAtual === 'mes') return data.getMonth()===agora.getMonth() && data.getFullYear()===agora.getFullYear();
     return true;
   });
+}
+
+// ===================== AFILIADOS =====================
+function getAfiliados() {
+  return JSON.parse(localStorage.getItem('rc-afiliados') || '[]');
+}
+
+function salvarAfiliados(lista) {
+  localStorage.setItem('rc-afiliados', JSON.stringify(lista));
+}
+
+let editandoAffId = null;
+
+function abrirModalNovoAfiliado() {
+  editandoAffId = null;
+  document.getElementById('modal-aff-titulo').textContent = 'Novo Afiliado';
+  document.getElementById('aff-nome').value = '';
+  document.getElementById('aff-usuario').value = '';
+  document.getElementById('aff-senha').value = '';
+  document.getElementById('aff-err').style.display = 'none';
+  document.getElementById('modal-afiliado').style.display = 'flex';
+}
+
+function fecharModalAfiliado() {
+  document.getElementById('modal-afiliado').style.display = 'none';
+}
+
+function salvarAfiliado() {
+  const nome = document.getElementById('aff-nome').value.trim();
+  const usuario = document.getElementById('aff-usuario').value.trim();
+  const senha = document.getElementById('aff-senha').value.trim();
+  const err = document.getElementById('aff-err');
+  err.style.display = 'none';
+
+  if (!nome || !usuario || !senha) { err.textContent = 'Preencha todos os campos.'; err.style.display = 'block'; return; }
+  if (senha.length < 6) { err.textContent = 'Senha deve ter no mínimo 6 caracteres.'; err.style.display = 'block'; return; }
+
+  const lista = getAfiliados();
+  const existe = lista.find(a => a.usuario === usuario && a.id !== editandoAffId);
+  if (existe) { err.textContent = 'Usuário já cadastrado.'; err.style.display = 'block'; return; }
+
+  if (editandoAffId) {
+    const idx = lista.findIndex(a => a.id === editandoAffId);
+    if (idx >= 0) { lista[idx].nome = nome; lista[idx].usuario = usuario; lista[idx].senha = senha; }
+  } else {
+    lista.push({ id: Date.now().toString(), nome, usuario, senha, ativo: true, criadoEm: new Date().toISOString() });
+  }
+
+  salvarAfiliados(lista);
+  fecharModalAfiliado();
+  renderAfiliados();
+  renderKpisAfiliados();
+}
+
+function toggleAfiliado(id) {
+  const lista = getAfiliados();
+  const aff = lista.find(a => a.id === id);
+  if (!aff) return;
+  const acao = aff.ativo ? 'Desativar' : 'Ativar';
+  if (!confirm(`${acao} acesso de ${aff.nome}?`)) return;
+  aff.ativo = !aff.ativo;
+  salvarAfiliados(lista);
+  renderAfiliados();
+  renderKpisAfiliados();
+}
+
+function renderAfiliados() {
+  const lista = getAfiliados();
+  const historico = getHistorico();
+  const container = document.getElementById('tabela-afiliados-container');
+
+  if (!lista.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🤝</div><div class="empty-title">Nenhum afiliado cadastrado</div><div class="empty-sub">Clique em "+ Novo Afiliado" para começar</div></div>`;
+    return;
+  }
+
+  const rows = lista.map(aff => {
+    const rels = historico.filter(r => r.afiliadoId === aff.id);
+    const fat = rels.length * 50;
+    const statusBadge = aff.ativo
+      ? `<span style="background:rgba(52,211,153,0.12);color:#34d399;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Ativo</span>`
+      : `<span style="background:rgba(248,113,113,0.12);color:#f87171;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Inativo</span>`;
+    const btnToggle = aff.ativo
+      ? `<button onclick="toggleAfiliado('${aff.id}')" style="background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🚫 Desativar</button>`
+      : `<button onclick="toggleAfiliado('${aff.id}')" style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">✅ Ativar</button>`;
+    return `<tr>
+      <td>${statusBadge}</td>
+      <td><strong>${aff.nome}</strong><br><small style="color:var(--muted)">${aff.usuario}</small></td>
+      <td style="font-weight:700;">${rels.length}</td>
+      <td style="color:var(--amber);font-weight:700;">R$ ${fat.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+      <td>${btnToggle}</td>
+    </tr>`;
+  }).sort((a,b) => b.localeCompare(a));
+
+  container.innerHTML = `<table class="table">
+    <thead><tr>
+      <th>Status</th><th>Afiliado</th><th>Relatórios</th><th>A receber (R$50/rel.)</th><th>Ação</th>
+    </tr></thead>
+    <tbody>${lista.sort((a,b) => {
+      const ra = historico.filter(r=>r.afiliadoId===a.id).length;
+      const rb = historico.filter(r=>r.afiliadoId===b.id).length;
+      return rb - ra;
+    }).map(aff => {
+      const rels = historico.filter(r => r.afiliadoId === aff.id);
+      const fat = rels.length * 50;
+      const statusBadge = aff.ativo
+        ? `<span style="background:rgba(52,211,153,0.12);color:#34d399;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Ativo</span>`
+        : `<span style="background:rgba(248,113,113,0.12);color:#f87171;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Inativo</span>`;
+      const btnToggle = aff.ativo
+        ? `<button onclick="toggleAfiliado('${aff.id}')" style="background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🚫 Desativar</button>`
+        : `<button onclick="toggleAfiliado('${aff.id}')" style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">✅ Ativar</button>`;
+      return `<tr>
+        <td>${statusBadge}</td>
+        <td><strong>${aff.nome}</strong><br><small style="color:var(--muted)">${aff.usuario}</small></td>
+        <td style="font-weight:700;">${rels.length}</td>
+        <td style="color:var(--amber);font-weight:700;">R$ ${fat.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        <td>${btnToggle}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+function renderKpisAfiliados() {
+  const lista = getAfiliados();
+  const historico = getHistorico();
+  const ativos = lista.filter(a => a.ativo !== false).length;
+  const totalRels = historico.filter(r => r.afiliadoId).length;
+  const fatTotal = totalRels * 50;
+  document.getElementById('card-afiliados').textContent = ativos;
+  document.getElementById('card-fat-afiliados').textContent = formatMoeda(fatTotal);
 }
 
 function formatMoeda(v) {
@@ -526,7 +742,10 @@ function exportarPDF() {
   window.print();
 }
 
+popularFiltroMes();
 renderDashboard();
+renderAfiliados();
+renderKpisAfiliados();
 </script>
 </body>
 </html>

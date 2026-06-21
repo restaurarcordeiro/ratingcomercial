@@ -198,14 +198,37 @@ function entrar() {
   const senha = document.getElementById('senha').value.trim();
   const erro = document.getElementById('error-msg');
 
+  // Admin
   if (usuario === 'Restaurar' && senha === 'Restaurar1') {
     sessionStorage.setItem('rc-logado', 'true');
+    sessionStorage.setItem('rc-role', 'admin');
+    sessionStorage.removeItem('rc-afiliado-id');
     window.location.href = 'dashboard.html';
-  } else {
-    erro.style.display = 'block';
-    document.getElementById('senha').value = '';
-    setTimeout(() => { erro.style.display = 'none'; }, 3000);
+    return;
   }
+
+  // Afiliados
+  const afiliados = JSON.parse(localStorage.getItem('rc-afiliados') || '[]');
+  const aff = afiliados.find(a => a.usuario === usuario && a.senha === senha);
+  if (aff) {
+    if (aff.ativo === false) {
+      erro.textContent = '🚫 Seu acesso foi desativado pelo administrador.';
+      erro.style.display = 'block';
+      setTimeout(() => { erro.style.display = 'none'; }, 4000);
+      return;
+    }
+    sessionStorage.setItem('rc-logado', 'true');
+    sessionStorage.setItem('rc-role', 'afiliado');
+    sessionStorage.setItem('rc-afiliado-id', aff.id);
+    sessionStorage.setItem('rc-afiliado-nome', aff.nome);
+    window.location.href = 'afiliado-dashboard.html';
+    return;
+  }
+
+  erro.textContent = 'Usuário ou senha incorretos. Tente novamente.';
+  erro.style.display = 'block';
+  document.getElementById('senha').value = '';
+  setTimeout(() => { erro.style.display = 'none'; }, 3000);
 }
 </script>
 </body>

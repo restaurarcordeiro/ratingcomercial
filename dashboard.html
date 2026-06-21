@@ -207,26 +207,39 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
   <!-- CARDS -->
   <div class="cards-grid">
-    <div class="card card-purple">
-      <div class="card-label">Total de Clientes</div>
+    <div class="card card-purple" onclick="abrirModalDetalhe('proprios')" style="cursor:pointer;" onmouseover="this.style.borderColor='rgba(139,92,246,0.4)'" onmouseout="this.style.borderColor=''">
+      <div class="card-label">Clientes Próprios (Admin)</div>
       <div class="card-value" id="card-clientes">0</div>
-      <div class="card-sub" id="card-clientes-sub">no período</div>
+      <div class="card-sub" id="card-clientes-sub">sem afiliados</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:8px;">clique para detalhes →</div>
     </div>
-    <div class="card card-green">
+    <div class="card card-green" onclick="abrirModalDetalhe('fat-proprio')" style="cursor:pointer;" onmouseover="this.style.borderColor='rgba(52,211,153,0.4)'" onmouseout="this.style.borderColor=''">
       <div class="card-label">Faturamento Próprio</div>
       <div class="card-value" id="card-faturamento">R$ 0</div>
       <div class="card-sub" id="card-fat-sub">acumulado total</div>
       <div style="font-size:11px;color:var(--muted);margin-top:6px;">Mensal: <span id="card-fat-mensal" style="color:var(--green);font-weight:700;">R$ 0</span></div>
+      <div style="font-size:10px;color:var(--dim);margin-top:6px;">clique para detalhes →</div>
     </div>
-    <div class="card card-amber">
-      <div class="card-label">Afiliados Ativos</div>
-      <div class="card-value" id="card-afiliados">0</div>
-      <div class="card-sub">afiliados cadastrados</div>
+    <div class="card card-amber" onclick="abrirModalDetalhe('clientes-afiliados')" style="cursor:pointer;" onmouseover="this.style.borderColor='rgba(251,191,36,0.4)'" onmouseout="this.style.borderColor=''">
+      <div class="card-label">Clientes dos Afiliados</div>
+      <div class="card-value" id="card-clientes-afiliados">0</div>
+      <div class="card-sub" id="card-clientes-afiliados-sub">via afiliados</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:8px;">clique para detalhes →</div>
     </div>
-    <div class="card card-red">
+    <div class="card card-red" onclick="abrirModalDetalhe('fat-afiliados')" style="cursor:pointer;" onmouseover="this.style.borderColor='rgba(248,113,113,0.4)'" onmouseout="this.style.borderColor=''">
       <div class="card-label">Fat. Total Afiliados</div>
       <div class="card-value" id="card-fat-afiliados">R$ 0</div>
-      <div class="card-sub" id="card-fat-afiliados-sub">R$ 50 por relatório</div>
+      <div class="card-sub" id="card-fat-afiliados-sub">acumulado total</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:8px;">clique para detalhes →</div>
+    </div>
+  </div>
+
+  <!-- MODAL DETALHE KPI -->
+  <div id="modal-kpi" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:center;justify-content:center;" onclick="if(event.target===this)fecharModalDetalhe()">
+    <div style="background:var(--surface);border:1px solid rgba(139,92,246,0.2);border-radius:20px;padding:32px;width:100%;max-width:600px;max-height:80vh;overflow-y:auto;position:relative;">
+      <button onclick="fecharModalDetalhe()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+      <div id="modal-kpi-titulo" style="font-size:18px;font-weight:900;margin-bottom:20px;"></div>
+      <div id="modal-kpi-conteudo"></div>
     </div>
   </div>
 
@@ -527,7 +540,9 @@ function renderKpisAfiliados() {
   const historico = getHistorico();
   const ativos = lista.filter(a => a.ativo !== false).length;
   const relsAfil = historico.filter(r => r.afiliadoId);
-  const fatAcumulado = relsAfil.length * 50;
+
+  // Soma o valor dos contratos (campo preco)
+  const fatAcumulado = relsAfil.reduce((s,r) => s + (parseFloat(r.preco)||0), 0);
 
   const agora = new Date();
   const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}`;
@@ -535,7 +550,7 @@ function renderKpisAfiliados() {
     const d = new Date(r.id);
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === mesAtual;
   });
-  const fatMes = relsMes.length * 50;
+  const fatMes = relsMes.reduce((s,r) => s + (parseFloat(r.preco)||0), 0);
 
   document.getElementById('card-afiliados').textContent = ativos;
   document.getElementById('card-fat-afiliados').textContent = formatMoeda(fatAcumulado);
@@ -551,23 +566,28 @@ function renderDashboard() {
   const dados = filtrarPorPeriodo(todos);
 
   // CARDS
-  const totalClientes = dados.length;
-  // Faturamento próprio = sem afiliadoId
   const dadosProprios = todos.filter(d => !d.afiliadoId);
+  const dadosAfiliados = todos.filter(d => !!d.afiliadoId);
   const fatAcumulado = dadosProprios.reduce((s,d) => s + (parseFloat(d.preco)||0), 0);
   const agora2 = new Date();
   const mesAtual2 = `${agora2.getFullYear()}-${String(agora2.getMonth()+1).padStart(2,'0')}`;
   const fatMensal = dadosProprios.filter(d => {
     const dt = new Date(d.id); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` === mesAtual2;
   }).reduce((s,d) => s + (parseFloat(d.preco)||0), 0);
+  const clientesMesAfil = dadosAfiliados.filter(d => {
+    const dt = new Date(d.id); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` === mesAtual2;
+  }).length;
 
-  document.getElementById('card-clientes').textContent = totalClientes;
+  document.getElementById('card-clientes').textContent = dadosProprios.length;
+  document.getElementById('card-clientes-sub').textContent = `${dadosProprios.filter(d=>{ const dt=new Date(d.id); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` === mesAtual2; }).length} este mês`;
   document.getElementById('card-faturamento').textContent = formatMoeda(fatAcumulado);
   document.getElementById('card-fat-mensal').textContent = formatMoeda(fatMensal);
   document.getElementById('card-fat-sub').textContent = 'acumulado total';
+  document.getElementById('card-clientes-afiliados').textContent = dadosAfiliados.length;
+  document.getElementById('card-clientes-afiliados-sub').textContent = `${clientesMesAfil} este mês`;
 
-  const subTexto = { hoje: 'hoje', semana: 'esta semana', mes: 'este mês', todos: 'no total' };
-  document.getElementById('card-clientes-sub').textContent = subTexto[filtroAtual] || filtroMesAtual;
+  // Guarda para modal
+  window._dashData = { dadosProprios, dadosAfiliados, fatAcumulado, fatMensal, mesAtual2 };
 
   // GRÁFICO BARRAS — clientes e faturamento por dia
   const diasMap = {};
@@ -742,6 +762,112 @@ function renderDashboard() {
 
 function exportarPDF() {
   window.print();
+}
+
+// ===================== MODAL DETALHE KPI =====================
+function abrirModalDetalhe(tipo) {
+  const d = window._dashData || {};
+  const titulo = document.getElementById('modal-kpi-titulo');
+  const conteudo = document.getElementById('modal-kpi-conteudo');
+  const pillClass = { AAA:'pill-aaa', AA:'pill-aa', A:'pill-a' };
+  const agora = new Date();
+  const mesNome = agora.toLocaleDateString('pt-BR', { month:'long', year:'numeric' });
+
+  function tabelaClientes(lista) {
+    if (!lista.length) return '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Nenhum cliente encontrado</p>';
+    return `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr>
+        <th style="text-align:left;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Cliente</th>
+        <th style="text-align:left;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Data</th>
+        <th style="text-align:left;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Class.</th>
+        <th style="text-align:right;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Valor</th>
+      </tr></thead>
+      <tbody>${lista.map(r => `<tr>
+        <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05)"><strong>${r.nome||'—'}</strong><br><small style="color:var(--muted)">${r.cpf||''}</small></td>
+        <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05);font-size:12px;color:var(--muted)">${r.dataGeracao||'—'}</td>
+        <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05)"><span class="pill ${pillClass[r.classDepois]||'pill-a'}">${r.classDepois||'—'}</span></td>
+        <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05);text-align:right;color:var(--green);font-weight:700;">${r.preco ? formatMoeda(r.preco) : '—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  function miniCards(v1, l1, v2, l2) {
+    return `<div style="display:flex;gap:12px;margin-bottom:20px;">
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;text-align:center;">
+        <div style="font-size:20px;font-weight:900;color:var(--purple-soft)">${v1}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">${l1}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;text-align:center;">
+        <div style="font-size:20px;font-weight:900;color:var(--purple-soft)">${v2}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">${l2}</div>
+      </div>
+    </div>`;
+  }
+
+  if (tipo === 'proprios') {
+    titulo.textContent = '👤 Clientes Próprios (Admin)';
+    const mesAtual = d.mesAtual2 || '';
+    const doMes = (d.dadosProprios||[]).filter(r => { const dt=new Date(r.id); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` === mesAtual; });
+    conteudo.innerHTML = miniCards((d.dadosProprios||[]).length, 'Total acumulado', doMes.length, mesNome) + tabelaClientes(d.dadosProprios||[]);
+
+  } else if (tipo === 'fat-proprio') {
+    titulo.textContent = '💰 Faturamento Próprio';
+    conteudo.innerHTML = miniCards(formatMoeda(d.fatAcumulado||0), 'Acumulado total', formatMoeda(d.fatMensal||0), mesNome) + tabelaClientes(d.dadosProprios||[]);
+
+  } else if (tipo === 'clientes-afiliados') {
+    titulo.textContent = '🤝 Clientes dos Afiliados';
+    const mesAtual = d.mesAtual2 || '';
+    const doMes = (d.dadosAfiliados||[]).filter(r => { const dt=new Date(r.id); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` === mesAtual; });
+    const afiliados = getAfiliados();
+    const lista = (d.dadosAfiliados||[]).map(r => ({ ...r, nomeAfiliado: (afiliados.find(a=>a.id===r.afiliadoId)||{}).nome||'—' }));
+    conteudo.innerHTML = miniCards((d.dadosAfiliados||[]).length, 'Total acumulado', doMes.length, mesNome) +
+      `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr>
+          <th style="text-align:left;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Cliente</th>
+          <th style="text-align:left;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Afiliado</th>
+          <th style="text-align:left;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Data</th>
+          <th style="text-align:right;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Valor</th>
+        </tr></thead>
+        <tbody>${lista.map(r=>`<tr>
+          <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05)"><strong>${r.nome||'—'}</strong></td>
+          <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05);color:var(--amber)">${r.nomeAfiliado}</td>
+          <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05);font-size:12px;color:var(--muted)">${r.dataGeracao||'—'}</td>
+          <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05);text-align:right;color:var(--green);font-weight:700;">${r.preco?formatMoeda(r.preco):'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+
+  } else if (tipo === 'fat-afiliados') {
+    titulo.textContent = '🤝 Faturamento Total Afiliados';
+    const relsAfil = d.dadosAfiliados||[];
+    const fatAc = relsAfil.reduce((s,r)=>s+(parseFloat(r.preco)||0),0);
+    const mesAtual = d.mesAtual2||'';
+    const fatMes = relsAfil.filter(r=>{ const dt=new Date(r.id); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` === mesAtual; }).reduce((s,r)=>s+(parseFloat(r.preco)||0),0);
+    // Por afiliado
+    const afiliados = getAfiliados();
+    const porAfiliado = afiliados.map(a => {
+      const rels = relsAfil.filter(r=>r.afiliadoId===a.id);
+      return { nome:a.nome, qtd:rels.length, fat:rels.reduce((s,r)=>s+(parseFloat(r.preco)||0),0) };
+    }).sort((a,b)=>b.fat-a.fat);
+    conteudo.innerHTML = miniCards(formatMoeda(fatAc), 'Acumulado total', formatMoeda(fatMes), mesNome) +
+      `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr>
+          <th style="text-align:left;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Afiliado</th>
+          <th style="text-align:right;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Clientes</th>
+          <th style="text-align:right;padding:8px;color:var(--muted);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;">Faturamento</th>
+        </tr></thead>
+        <tbody>${porAfiliado.map((a,i)=>{const m=['🥇','🥈','🥉'][i]||`#${i+1}`; return `<tr>
+          <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05)"><strong>${m} ${a.nome}</strong></td>
+          <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05);text-align:right">${a.qtd}</td>
+          <td style="padding:8px;border-bottom:1px solid rgba(139,92,246,0.05);text-align:right;color:var(--amber);font-weight:700;">${formatMoeda(a.fat)}</td>
+        </tr>`;}).join('')}</tbody>
+      </table>`;
+  }
+
+  document.getElementById('modal-kpi').style.display = 'flex';
+}
+
+function fecharModalDetalhe() {
+  document.getElementById('modal-kpi').style.display = 'none';
 }
 
 popularFiltroMes();

@@ -477,6 +477,9 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 </div>
 
 <script>
+const SUPABASE_URL = 'https://mdjknqzpfwtxtoycycxa.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Bg0cbkI9LkpAZTTJB8TmxA_7DWxOXCV';
+
 function toggleCheck(el) {
   const cb = el.querySelector('input[type=checkbox]');
   cb.checked = !cb.checked;
@@ -554,7 +557,7 @@ function limparForm() {
   document.getElementById('score-preview').style.display = 'none';
 }
 
-function gerarRelatorio() {
+async function gerarRelatorio() {
   const nome = document.getElementById('nome').value.trim();
   const cpf = document.getElementById('cpf').value.trim();
   const renda = parseFloat(document.getElementById('renda-valor').value) || 0;
@@ -596,10 +599,54 @@ function gerarRelatorio() {
     obs: document.getElementById('obs').value
   };
 
-  // Salvar no histórico
-  const historico = JSON.parse(localStorage.getItem('rating-historico') || '[]');
-  historico.unshift(dados);
-  localStorage.setItem('rating-historico', JSON.stringify(historico));
+  // Salvar no Supabase
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/relatorios`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        id: dados.id,
+        afiliado_id: dados.afiliadoId || null,
+        nome: dados.nome,
+        cpf: dados.cpf,
+        nascimento: dados.nascimento || null,
+        civil: dados.civil || null,
+        consultor: dados.consultor || null,
+        preco: dados.preco || 0,
+        renda_valor: dados.rendaValor || 0,
+        dividas_valor: dados.dividasValor || 0,
+        score_depois: dados.scoreDepois || null,
+        class_depois: dados.classDepois || null,
+        renda_depois: dados.rendaDepois || null,
+        email: dados.email || null,
+        telefone: dados.telefone || null,
+        endereco: dados.endereco || null,
+        cidade: dados.cidade || null,
+        cep: dados.cep || null,
+        instrucao: dados.instrucao || null,
+        acoes: dados.acoes || [],
+        obs: dados.obs || null,
+        data_geracao: dados.dataGeracao
+      })
+    });
+    if (!r.ok) {
+      const err = await r.text();
+      console.error('Erro Supabase:', err);
+      alert('Erro ao salvar relatório. Tente novamente.');
+      return;
+    }
+  } catch(e) {
+    console.error('Erro ao salvar:', e);
+    alert('Erro de conexão. Verifique sua internet.');
+    return;
+  }
+
+  // Salvar localmente só para abrir o PDF
   localStorage.setItem('rating-atual', JSON.stringify(dados));
 
   // Mostrar alerta

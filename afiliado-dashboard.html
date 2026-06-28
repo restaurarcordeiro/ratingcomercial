@@ -152,11 +152,15 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 </div>
 
 <script>
+const SUPABASE_URL = 'https://mdjknqzpfwtxtoycycxa.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Bg0cbkI9LkpAZTTJB8TmxA_7DWxOXCV';
+
 const afiliadoId = sessionStorage.getItem('rc-afiliado-id');
 const afiliadoNome = sessionStorage.getItem('rc-afiliado-nome') || 'Afiliado';
 document.getElementById('nav-nome').textContent = afiliadoNome;
 
 let filtroAtual = 'todos';
+let _meusRelatorios = [];
 
 function sair() {
   sessionStorage.removeItem('rc-logado');
@@ -171,11 +175,6 @@ function setFiltro(filtro, btn) {
   document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   render();
-}
-
-function getMeusRelatorios() {
-  const todos = JSON.parse(localStorage.getItem('rating-historico') || '[]');
-  return todos.filter(r => r.afiliadoId === afiliadoId);
 }
 
 function filtrarPorPeriodo(dados) {
@@ -194,8 +193,7 @@ function formatMoeda(v) {
 }
 
 function render() {
-  const meus = getMeusRelatorios();
-  const filtrados = filtrarPorPeriodo(meus);
+  const filtrados = filtrarPorPeriodo(_meusRelatorios);
   const fat = filtrados.reduce((s,r) => s + (parseFloat(r.preco)||0), 0);
   const subTexto = { hoje:'hoje', semana:'esta semana', mes:'este mês', todos:'no total' };
 
@@ -203,7 +201,7 @@ function render() {
   document.getElementById('card-rels-sub').textContent = subTexto[filtroAtual];
   document.getElementById('card-fat').textContent = formatMoeda(fat);
   document.getElementById('card-fat-sub').textContent = subTexto[filtroAtual];
-  document.getElementById('card-total').textContent = meus.length;
+  document.getElementById('card-total').textContent = _meusRelatorios.length;
 
   const container = document.getElementById('tabela-container');
   if (!filtrados.length) {
@@ -224,7 +222,27 @@ function render() {
   </table>`;
 }
 
-render();
+async function init() {
+  try {
+    const rels = await fetch(
+      `${SUPABASE_URL}/rest/v1/relatorios?afiliado_id=eq.${afiliadoId}&order=id.desc&limit=1000`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    ).then(r => r.json());
+    _meusRelatorios = (rels || []).map(r => ({
+      id: r.id,
+      nome: r.nome, cpf: r.cpf,
+      preco: r.preco,
+      scoreDepois: r.score_depois,
+      classDepois: r.class_depois,
+      dataGeracao: r.data_geracao
+    }));
+  } catch(e) {
+    console.error('Erro ao carregar relatórios:', e);
+  }
+  render();
+}
+
+init();
 </script>
 </body>
 </html>

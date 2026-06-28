@@ -176,7 +176,16 @@ body::before {
 </div>
 
 <script>
-// Verificar se já está logado
+const SUPABASE_URL = 'https://mdjknqzpfwtxtoycycxa.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Bg0cbkI9LkpAZTTJB8TmxA_7DWxOXCV';
+
+async function sbGet(table, params) {
+  const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+  return r.json();
+}
+
 if (sessionStorage.getItem('rc-logado') === 'true') {
   window.location.href = 'dashboard.html';
 }
@@ -193,10 +202,14 @@ function toggleSenha() {
   }
 }
 
-function entrar() {
+async function entrar() {
   const usuario = document.getElementById('usuario').value.trim();
   const senha = document.getElementById('senha').value.trim();
   const erro = document.getElementById('error-msg');
+  const btn = document.querySelector('.btn-login');
+
+  btn.textContent = 'Verificando...';
+  btn.disabled = true;
 
   // Admin
   if (usuario === 'Restaurar' && senha === 'Restaurar1') {
@@ -207,28 +220,36 @@ function entrar() {
     return;
   }
 
-  // Afiliados
-  const afiliados = JSON.parse(localStorage.getItem('rc-afiliados') || '[]');
-  const aff = afiliados.find(a => a.usuario === usuario && a.senha === senha);
-  if (aff) {
-    if (aff.ativo === false) {
-      erro.textContent = '🚫 Seu acesso foi desativado pelo administrador.';
-      erro.style.display = 'block';
-      setTimeout(() => { erro.style.display = 'none'; }, 4000);
+  // Afiliados via Supabase
+  try {
+    const lista = await sbGet('afiliados', { usuario: `eq.${usuario}`, senha: `eq.${senha}`, select: '*' });
+    const aff = lista && lista[0];
+    if (aff) {
+      if (aff.ativo === false) {
+        erro.textContent = '🚫 Seu acesso foi desativado pelo administrador.';
+        erro.style.display = 'block';
+        setTimeout(() => { erro.style.display = 'none'; }, 4000);
+        btn.textContent = 'Entrar no sistema';
+        btn.disabled = false;
+        return;
+      }
+      sessionStorage.setItem('rc-logado', 'true');
+      sessionStorage.setItem('rc-role', 'afiliado');
+      sessionStorage.setItem('rc-afiliado-id', aff.id);
+      sessionStorage.setItem('rc-afiliado-nome', aff.nome);
+      window.location.href = 'afiliado-dashboard.html';
       return;
     }
-    sessionStorage.setItem('rc-logado', 'true');
-    sessionStorage.setItem('rc-role', 'afiliado');
-    sessionStorage.setItem('rc-afiliado-id', aff.id);
-    sessionStorage.setItem('rc-afiliado-nome', aff.nome);
-    window.location.href = 'afiliado-dashboard.html';
-    return;
+  } catch(e) {
+    console.error('Erro Supabase:', e);
   }
 
   erro.textContent = 'Usuário ou senha incorretos. Tente novamente.';
   erro.style.display = 'block';
   document.getElementById('senha').value = '';
   setTimeout(() => { erro.style.display = 'none'; }, 3000);
+  btn.textContent = 'Entrar no sistema';
+  btn.disabled = false;
 }
 </script>
 </body>

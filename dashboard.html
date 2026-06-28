@@ -224,7 +224,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       <div class="card-label">Clientes dos Afiliados</div>
       <div class="card-value" id="card-clientes-afiliados">0</div>
       <div class="card-sub" id="card-clientes-afiliados-sub">via afiliados</div>
-      <div style="font-size:10px;color:var(--dim);margin-top:8px;">clique para detalhes →</div>
+      <div style="font-size:11px;color:var(--amber);font-weight:700;margin-top:6px;" id="card-clientes-afiliados-fat">R$ 0,00</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:4px;">clique para detalhes →</div>
     </div>
     <div class="card card-red" onclick="abrirModalDetalhe('fat-afiliados')" style="cursor:pointer;" onmouseover="this.style.borderColor='rgba(248,113,113,0.4)'" onmouseout="this.style.borderColor=''">
       <div class="card-label">Fat. Total Afiliados</div>
@@ -562,22 +563,23 @@ function renderAfiliados() {
 }
 
 function renderKpisAfiliados() {
-  const lista = getAfiliados();
-  const historico = JSON.parse(localStorage.getItem('rating-historico') || '[]');
-  const ativos = lista.filter(a => a.ativo !== false).length;
-  const relsAfil = historico.filter(r => r.afiliadoId);
+  const relsAfil = _historicoDB.filter(r => r.afiliadoId);
 
-  const fatAcumulado = relsAfil.reduce((s,r) => s + (parseFloat(r.preco)||0), 0);
+  const fatAcumulado = relsAfil.length * 50;
 
   const agora = new Date();
   const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}`;
   const fatMes = relsAfil.filter(r => {
     const d = new Date(r.id);
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === mesAtual;
-  }).reduce((s,r) => s + (parseFloat(r.preco)||0), 0);
+  }).length * 50;
 
   document.getElementById('card-fat-afiliados').textContent = formatMoeda(fatAcumulado);
   document.getElementById('card-fat-afiliados-sub').textContent = `Mensal: ${formatMoeda(fatMes)}`;
+
+  // Subtotal no card de clientes dos afiliados
+  const elFat = document.getElementById('card-clientes-afiliados-fat');
+  if (elFat) elFat.textContent = formatMoeda(fatAcumulado);
 }
 
 function formatMoeda(v) {

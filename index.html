@@ -273,8 +273,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
             <input type="text" id="preco" placeholder="Ex: 1.500,00" oninput="mascaraMoeda(this)">
           </div>
           <div class="field">
-            <label class="field-label" style="color:var(--dim)">Obs: valor visível apenas no Dashboard</label>
-            <div style="background:rgba(124,58,237,0.05);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--dim);">Não aparece no relatório do cliente</div>
+            <label class="field-label" style="color:var(--dim)">Informação</label>
+            <div style="background:rgba(124,58,237,0.05);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--dim);">Valor obrigatório — não aparece no relatório do cliente</div>
           </div>
         </div>
       </div>
@@ -562,12 +562,19 @@ async function gerarRelatorio() {
   const cpf = document.getElementById('cpf').value.trim();
   const renda = parseFloat(document.getElementById('renda-valor').value) || 0;
 
+  const preco = parseFloat(document.getElementById('preco').value.replace(/\./g,'').replace(',','.')) || 0;
+
   if (!nome || !cpf) {
     alert('Preencha ao menos o nome e CPF do cliente.');
     return;
   }
   if (renda === 0) {
     alert('Informe a renda mensal do cliente para calcular o score.');
+    return;
+  }
+  if (preco === 0) {
+    alert('Informe o valor cobrado do cliente.');
+    document.getElementById('preco').focus();
     return;
   }
 
@@ -583,7 +590,7 @@ async function gerarRelatorio() {
     nascimento: document.getElementById('nascimento').value,
     civil: document.getElementById('civil').value,
     consultor: document.getElementById('consultor').value,
-    preco: parseFloat(document.getElementById('preco').value.replace(/\./g,'').replace(',','.')) || 0,
+    preco: preco,
     rendaValor: renda,
     dividasValor: parseFloat(document.getElementById('dividas-valor').value) || 0,
     scoreDepois: resultado.score,

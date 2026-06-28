@@ -778,7 +778,13 @@ function renderDashboard() {
             <td style="font-size:12px">${d.dataGeracao}</td>
             <td><strong>${d.scoreDepois || '—'}</strong></td>
             <td><span class="pill ${pillClass[d.classDepois] || 'pill-a'}">${d.classDepois || '—'}</span></td>
-            <td style="color:var(--green);font-weight:700">${d.preco ? formatMoeda(d.preco) : '<span style="color:var(--dim)">—</span>'}</td>
+            <td id="cell-preco-${d.id}">
+              ${d.preco
+                ? `<span style="color:var(--green);font-weight:700">${formatMoeda(d.preco)}</span>
+                   <button onclick="editarPreco(${d.id})" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:12px;margin-left:4px;" title="Editar valor">✏️</button>`
+                : `<button onclick="editarPreco(${d.id})" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:var(--amber);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">+ Valor</button>`
+              }
+            </td>
             <td style="font-size:12px">${d.consultor || '—'}</td>
           </tr>`).join('')}
       </tbody>
@@ -893,6 +899,48 @@ function abrirModalDetalhe(tipo) {
 
 function fecharModalDetalhe() {
   document.getElementById('modal-kpi').style.display = 'none';
+}
+
+async function editarPreco(id) {
+  const d = _historicoDB.find(r => r.id === id);
+  if (!d) return;
+  const cell = document.getElementById(`cell-preco-${id}`);
+  const valorAtual = d.preco ? String(d.preco).replace('.', ',') : '';
+  cell.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <input id="input-preco-${id}" type="text" value="${valorAtual}"
+        placeholder="Ex: 1.500,00"
+        style="width:110px;background:var(--surface2);border:1px solid var(--purple);border-radius:6px;padding:5px 8px;font-size:13px;color:var(--text);outline:none;"
+        oninput="mascaraPreco(this)">
+      <button onclick="salvarPreco(${id})" style="background:var(--purple);border:none;color:#fff;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✓</button>
+      <button onclick="renderDashboard()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:5px 8px;border-radius:6px;font-size:12px;cursor:pointer;">✕</button>
+    </div>`;
+  document.getElementById(`input-preco-${id}`).focus();
+}
+
+function mascaraPreco(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (!v) { input.value = ''; return; }
+  v = (parseInt(v) / 100).toFixed(2);
+  input.value = v.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+async function salvarPreco(id) {
+  const input = document.getElementById(`input-preco-${id}`);
+  const valor = parseFloat(input.value.replace(/\./g,'').replace(',','.')) || 0;
+  if (!valor) { alert('Informe um valor válido.'); return; }
+  try {
+    await sbFetch(`relatorios?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ preco: valor })
+    });
+    const idx = _historicoDB.findIndex(r => r.id === id);
+    if (idx >= 0) _historicoDB[idx].preco = valor;
+    renderDashboard();
+    renderKpisAfiliados();
+  } catch(e) {
+    alert('Erro ao salvar. Tente novamente.');
+  }
 }
 
 async function init() {
